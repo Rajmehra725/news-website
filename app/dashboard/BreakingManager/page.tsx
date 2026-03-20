@@ -136,7 +136,7 @@ export default function BreakingNewsPage() {
       {/* ADMIN PANEL */}
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-6 text-red-600">
-          STAR NEWS - BREAKING HEADLINES ADMIN
+          STAR NEWS - BREAKING HEADLINES ADMIN 
         </h1>
 
         {/* Add/Edit Form */}
