@@ -1,65 +1,103 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
+  const [show, setShow] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const router = useRouter();
+
+  const handleLogin = () => {
+    setError("");
+
+    // 🔐 Dummy credentials
+    if (email === "admin@starnews.com" && password === "123456") {
+      router.push("/dashboard");
+    } else {
+      setError("Invalid credentials");
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-black text-white flex flex-col">
+
+      {/* 🔴 Breaking News Bar */}
+      <div className="bg-red-600 flex items-center text-white text-sm overflow-hidden">
+        <span className="bg-black px-3 py-2 font-bold">BREAKING</span>
+
+        <div className="overflow-hidden flex-1">
+          <div className="animate-ticker whitespace-nowrap px-4">
+            🔴 Secure Admin Access Enabled | STAR NEWS CONTROL PANEL | Authorized Personnel Only
+          </div>
+        </div>
+      </div>
+
+      {/* Center */}
+      <div className="flex flex-1 items-center justify-center px-4 bg-gradient-to-br from-black via-gray-900 to-red-900">
+
+        <div className="w-full max-w-md backdrop-blur-lg bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8">
+          
+          <h1 className="text-4xl font-extrabold text-center text-red-500 mb-2">
+            STAR NEWS
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+
+          <p className="text-center text-gray-300 text-sm mb-4 uppercase">
+            Editorial Control Panel
+          </p>
+
+          <h2 className="text-lg text-center mb-4 font-bold">
+            🔐 Authorized Login Required
+          </h2>
+
+          {/* Error */}
+          {error && (
+            <p className="text-red-400 text-sm mb-3 text-center">{error}</p>
+          )}
+
+          {/* Email */}
+          <input
+            type="email"
+            placeholder="Official Email ID"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full mb-4 px-4 py-3 rounded-xl bg-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+          />
+
+          {/* Password */}
+          <div className="relative mb-4">
+            <input
+              type={show ? "text" : "password"}
+              placeholder="Enter Secure Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+
+            <button
+              onClick={() => setShow(!show)}
+              className="absolute right-3 top-3 text-sm text-gray-300"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              {show ? "Hide" : "Show"}
+            </button>
+          </div>
+
+          {/* Button */}
+          <button
+            onClick={handleLogin}
+            className="w-full py-3 rounded-xl bg-red-600 text-white font-bold uppercase hover:bg-red-700 transition"
+          >
+            Access Newsroom
+          </button>
+
+          <p className="text-center text-gray-400 text-xs mt-4">
+            Demo Login: admin@starnews.com / 123456
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
