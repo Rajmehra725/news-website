@@ -19,7 +19,6 @@ export default function AdsManager() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Fetch
   const fetchAds = async () => {
     try {
       const res = await axios.get("https://starnewsbackend.onrender.com/api/ads");
@@ -39,7 +38,6 @@ export default function AdsManager() {
     fetchAds();
   }, []);
 
-  // 🔹 Add
   const addAd = async () => {
     if (!title || !image) return;
 
@@ -65,7 +63,6 @@ export default function AdsManager() {
     }
   };
 
-  // 🔹 Update
   const updateAd = async (id: string, title: string) => {
     const formData = new FormData();
     formData.append("title", title);
@@ -80,7 +77,6 @@ export default function AdsManager() {
     );
   };
 
-  // 🔹 Toggle
   const toggleAd = async (id: string) => {
     const res = await axios.patch(
       `https://starnewsbackend.onrender.com/api/ads/toggle/${id}`
@@ -91,29 +87,31 @@ export default function AdsManager() {
     );
   };
 
-  // 🔹 Delete
   const deleteAd = async (id: string) => {
     await axios.delete(`https://starnewsbackend.onrender.com/api/ads/${id}`);
     setAds((prev) => prev.filter((a) => a._id !== id));
   };
 
   return (
-    <div className="bg-white p-5 rounded-xl shadow space-y-5">
-      <h2 className="text-xl font-semibold text-red-600">
+    <div className="bg-white p-4 sm:p-6 rounded-xl shadow space-y-6">
+      
+      {/* Header */}
+      <h2 className="text-lg sm:text-xl font-semibold text-red-600">
         Ads Manager
       </h2>
 
-      {/* Add */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Add Section */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ad title"
-          className="border px-3 py-2 flex-1 rounded"
+          className="border px-3 py-2 flex-1 rounded w-full"
         />
 
         <input
           type="file"
+          className="w-full sm:w-auto text-sm"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -124,7 +122,7 @@ export default function AdsManager() {
 
         <button
           onClick={addAd}
-          className="bg-red-600 text-white px-4 py-2 rounded flex items-center justify-center gap-1"
+          className="bg-red-600 text-white px-4 py-2 rounded flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           {loading ? (
             <Loader className="animate-spin" size={16} />
@@ -135,17 +133,22 @@ export default function AdsManager() {
         </button>
       </div>
 
+      {/* Preview */}
       {preview && (
-        <img src={preview} className="h-20 w-40 rounded" />
+        <img
+          src={preview}
+          className="h-20 w-full sm:w-40 object-cover rounded"
+        />
       )}
 
       {/* List */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {ads.map((ad) => (
           <div
             key={ad._id}
-            className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center p-3 bg-gray-50 rounded"
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg"
           >
+            {/* Left */}
             <div className="flex-1 w-full">
               <input
                 value={ad.title}
@@ -158,7 +161,7 @@ export default function AdsManager() {
                     )
                   )
                 }
-                className="border px-2 py-1 w-full rounded"
+                className="border px-2 py-2 w-full rounded text-sm"
               />
 
               {ad.image && (
@@ -168,29 +171,30 @@ export default function AdsManager() {
                       ? ad.image
                       : `https://starnewsbackend.onrender.com/${ad.image}`
                   }
-                  className="h-16 w-32 mt-2 rounded"
+                  className="h-20 w-full sm:w-32 mt-2 object-cover rounded"
                 />
               )}
             </div>
 
-            <div className="flex gap-2">
+            {/* Actions */}
+            <div className="flex gap-2 w-full sm:w-auto justify-end">
               <button
                 onClick={() => updateAd(ad._id, ad.title)}
-                className="bg-blue-100 p-2 rounded"
+                className="bg-blue-100 p-2 rounded w-full sm:w-auto flex justify-center"
               >
                 <Check size={16} />
               </button>
 
               <button
                 onClick={() => toggleAd(ad._id)}
-                className="bg-green-100 p-2 rounded"
+                className="bg-green-100 p-2 rounded w-full sm:w-auto flex justify-center"
               >
                 <Power size={16} />
               </button>
 
               <button
                 onClick={() => deleteAd(ad._id)}
-                className="bg-red-100 p-2 rounded"
+                className="bg-red-100 p-2 rounded w-full sm:w-auto flex justify-center"
               >
                 <Trash2 size={16} />
               </button>

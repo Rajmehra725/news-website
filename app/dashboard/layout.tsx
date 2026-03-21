@@ -10,11 +10,9 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex h-screen bg-gray-100 text-gray-800">
-      
-      {/* Sidebar */}
-      <div className="w-64 hidden md:block border-r bg-white">
-        <Sidebar />
-      </div>
+
+      {/* ✅ Sidebar (No hidden!) */}
+      <Sidebar />
 
       {/* Main Section */}
       <div className="flex-1 flex flex-col">

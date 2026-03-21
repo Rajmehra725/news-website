@@ -21,8 +21,10 @@ export default function NewsPage() {
   const [newsList, setNewsList] = useState<News[]>([]);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const [categories, setCategories] = useState([
+  const [categories] = useState([
     "Politics",
     "Crime",
     "Sports",
@@ -30,7 +32,6 @@ export default function NewsPage() {
     "Local",
   ]);
 
-  const [newCategory, setNewCategory] = useState("");
   const [search, setSearch] = useState("");
 
   const [featuredFile, setFeaturedFile] = useState<File | null>(null);
@@ -46,7 +47,6 @@ export default function NewsPage() {
     images: [],
   });
 
-  // 🔥 Fetch News
   const fetchNews = async () => {
     const res = await axios.get("https://starnewsbackend.onrender.com/api/news");
     setNewsList(res.data);
@@ -54,13 +54,14 @@ export default function NewsPage() {
 
   useEffect(() => {
     fetchNews();
+    const interval = setInterval(fetchNews, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Featured Image
   const handleFeatured = (e: any) => {
     const file = e.target.files[0];
     if (file) {
@@ -69,35 +70,52 @@ export default function NewsPage() {
     }
   };
 
-  // Multiple Images
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (!e.target.files) return;
+    if (!e.target.files) return;
 
-  const files: File[] = Array.from(e.target.files);
+    const files: File[] = Array.from(e.target.files as FileList);
 
-  setImageFiles((prev) => [...prev, ...files]);
+    setImageFiles((prev: File[]) => [...prev, ...files]);
 
-  const previews = files.map((file) => URL.createObjectURL(file));
+    const previews = files.map((file) => URL.createObjectURL(file));
 
-  setForm((prev: any) => ({
-    ...prev,
-    images: [...prev.images, ...previews],
-  }));
-};
-  const removeImage = (index: number) => {
-    const updatedPreview = form.images.filter((_: any, i: number) => i !== index);
-    const updatedFiles = imageFiles.filter((_, i) => i !== index);
-
-    setForm({ ...form, images: updatedPreview });
-    setImageFiles(updatedFiles);
+    setForm((prev: any) => ({
+      ...prev,
+      images: [...prev.images, ...previews],
+    }));
   };
 
-  // 🚀 CREATE / UPDATE
-  const handleSubmit = async () => {
-    if (!form.title || !form.description) {
-      return alert("Title & Description required");
-    }
+  const removeImage = (index: number) => {
+    setForm({
+      ...form,
+      images: form.images.filter((_: any, i: number) => i !== index),
+    });
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
+  // ✅ FIXED EDIT FUNCTION
+  const handleEdit = (item: News) => {
+    setForm({
+      title: item.title || "",
+      description: item.description || "",
+      category: item.category || "",
+      content: item.content || "",
+      status: item.status || "draft",
+      featuredImage: item.featuredImage || "",
+      images: item.images || [],
+    });
+
+    setFeaturedFile(null);
+    setImageFiles([]);
+
+    setEditId(item._id);
+    setOpen(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!form.title || !form.description) return alert("Required");
+
+    setSaving(true);
     try {
       const formData = new FormData();
 
@@ -116,18 +134,25 @@ export default function NewsPage() {
       });
 
       if (editId) {
-        await axios.put(`https://starnewsbackend.onrender.com/api/news/${editId}`, formData);
+        await axios.put(
+          `https://starnewsbackend.onrender.com/api/news/${editId}`,
+          formData
+        );
       } else {
-        await axios.post("https://starnewsbackend.onrender.com/api/news", formData);
+        await axios.post(
+          "https://starnewsbackend.onrender.com/api/news",
+          formData
+        );
       }
 
       fetchNews();
       setOpen(false);
       setEditId(null);
       resetForm();
-    } catch (err) {
-      console.error(err);
-      alert("Error saving news");
+    } catch {
+      alert("Error");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -145,33 +170,27 @@ export default function NewsPage() {
     setImageFiles([]);
   };
 
-  // ✏️ Edit
-  const handleEdit = (item: News) => {
-    setForm(item);
-    setEditId(item._id);
-    setOpen(true);
-  };
-
-  // 🗑️ Delete
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete news?")) return;
-
+    if (!confirm("Delete?")) return;
+    setLoadingId(id);
     await axios.delete(`https://starnewsbackend.onrender.com/api/news/${id}`);
     fetchNews();
+    setLoadingId(null);
   };
 
   return (
-    <div className="p-6 text-white bg-black min-h-screen">
+    <div className="p-4 sm:p-6 bg-black text-white min-h-screen">
 
-      {/* Header */}
-      <div className="flex justify-between mb-6">
-        <h1 className="text-3xl font-bold">📰 News Management</h1>
-        <button onClick={() => setOpen(true)} className="bg-red-600 px-5 py-2 rounded">
-          + Create News
+      <div className="flex flex-col sm:flex-row justify-between gap-3 mb-6">
+        <h1 className="text-xl sm:text-3xl font-bold">📰 News</h1>
+        <button
+          onClick={() => setOpen(true)}
+          className="bg-red-600 px-4 py-2 rounded w-full sm:w-auto"
+        >
+          + Create
         </button>
       </div>
 
-      {/* Search */}
       <input
         placeholder="Search..."
         value={search}
@@ -179,67 +198,81 @@ export default function NewsPage() {
         className="mb-4 p-2 w-full bg-gray-800 rounded"
       />
 
-      {/* Table */}
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-gray-800">
-            <th>Title</th>
-            <th>Category</th>
-            <th>Views</th>
-            <th>Shares</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+      {/* Desktop */}
+      <div className="hidden md:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-800">
+              <th>Title</th>
+              <th>Category</th>
+              <th>Views</th>
+              <th>Shares</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          {newsList
-            .filter((n) => n.title.toLowerCase().includes(search.toLowerCase()))
-            .map((item) => (
-              <tr key={item._id} className="border-b">
-                <td>{item.title}</td>
-                <td>{item.category}</td>
+          <tbody>
+            {newsList
+              .filter((n) =>
+                n.title.toLowerCase().includes(search.toLowerCase())
+              )
+              .map((item) => (
+                <tr key={item._id} className="border-b">
+                  <td>{item.title}</td>
+                  <td>{item.category}</td>
+                  <td>👁 {item.views}</td>
+                  <td>🔗 {item.shares}</td>
 
-                <td>
-                  <button
-                    onClick={async () => {
-                      await axios.put(`https://starnewsbackend.onrender.com/api/news/view/${item._id}`);
-                      fetchNews();
-                    }}
-                  >
-                    👁 {item.views}
-                  </button>
-                </td>
+                  <td className="flex gap-2">
+                    <button onClick={() => handleEdit(item)}>Edit</button>
 
-                <td>
-                  <button
-                    onClick={async () => {
-                      await axios.put(`https://starnewsbackend.onrender.com/api/news/share/${item._id}`);
-                      fetchNews();
-                    }}
-                  >
-                    🔗 {item.shares}
-                  </button>
-                </td>
+                    <button onClick={() => handleDelete(item._id)}>
+                      {loadingId === item._id ? "..." : "Delete"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
 
-                <td>
-                  <button onClick={() => handleEdit(item)}>Edit</button>
-                  <button onClick={() => handleDelete(item._id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      {/* Mobile */}
+      <div className="md:hidden space-y-3">
+        {newsList
+          .filter((n) =>
+            n.title.toLowerCase().includes(search.toLowerCase())
+          )
+          .map((item) => (
+            <div key={item._id} className="bg-gray-900 p-3 rounded space-y-2">
+              <h2 className="font-bold text-sm">{item.title}</h2>
+              <p className="text-xs">{item.category}</p>
+
+              <div className="flex justify-between text-xs">
+                <span>👁 {item.views}</span>
+                <span>🔗 {item.shares}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <button onClick={() => handleEdit(item)}>Edit</button>
+
+                <button onClick={() => handleDelete(item._id)}>
+                  {loadingId === item._id ? "..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          ))}
+      </div>
 
       {/* Modal */}
       {open && (
-        <div className="fixed inset-0 bg-black/70 flex justify-center items-center">
-          <div className="bg-gray-900 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] bg-black/80 flex justify-center items-center p-3">
+          <div className="bg-gray-900 p-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded">
 
-            <input name="title" placeholder="Title" value={form.title} onChange={handleChange} className="w-full mb-2 p-2 bg-gray-800" />
+            <input name="title" value={form.title} onChange={handleChange} placeholder="Title" className="w-full mb-2 p-2 bg-gray-800" />
 
-            <textarea name="description" placeholder="Description" value={form.description} onChange={handleChange} className="w-full mb-2 p-2 bg-gray-800" />
+            <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full mb-2 p-2 bg-gray-800" />
 
-            <textarea name="content" placeholder="Content" value={form.content} onChange={handleChange} className="w-full mb-2 p-2 bg-gray-800" />
+            <textarea name="content" value={form.content} onChange={handleChange} placeholder="Content" className="w-full mb-2 p-2 bg-gray-800" />
 
             <select name="category" value={form.category} onChange={handleChange} className="w-full mb-2 p-2 bg-gray-800">
               <option value="">Select</option>
@@ -247,21 +280,32 @@ export default function NewsPage() {
             </select>
 
             <input type="file" onChange={handleFeatured} />
-            {form.featuredImage && <img src={form.featuredImage} className="h-32 mt-2" />}
+            {form.featuredImage && <img src={form.featuredImage} className="h-24 mt-2" />}
 
             <input type="file" multiple onChange={handleImage} className="mt-2" />
 
-            <div className="flex gap-2 mt-2 flex-wrap">
+            <div className="flex flex-wrap gap-2 mt-2">
               {form.images.map((img: string, i: number) => (
                 <div key={i}>
-                  <img src={img} className="w-20 h-20" />
+                  <img src={img} className="w-16 h-16" />
                   <button onClick={() => removeImage(i)}>X</button>
                 </div>
               ))}
             </div>
 
-            <button onClick={handleSubmit} className="bg-green-600 mt-4 px-4 py-2">
-              Save
+            <button onClick={handleSubmit} className="bg-green-600 mt-4 px-4 py-2 w-full">
+              {saving ? "Saving..." : "Save"}
+            </button>
+
+            <button
+              onClick={() => {
+                setOpen(false);
+                resetForm();
+                setEditId(null);
+              }}
+              className="bg-gray-500 mt-2 px-4 py-2 w-full"
+            >
+              Cancel
             </button>
 
           </div>

@@ -21,7 +21,6 @@ export default function BreakingNewsPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Fetch news
   const fetchNews = async () => {
     try {
       const res = await axios.get<BreakingNews[]>(API_URL);
@@ -38,7 +37,6 @@ export default function BreakingNewsPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Add / Update
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return alert("Headline is required");
@@ -61,7 +59,6 @@ export default function BreakingNewsPage() {
     }
   };
 
-  // Delete
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this headline?")) return;
     try {
@@ -73,7 +70,6 @@ export default function BreakingNewsPage() {
     }
   };
 
-  // Toggle active
   const handleToggle = async (id: string) => {
     try {
       await axios.patch(`${API_URL}/toggle/${id}`);
@@ -84,87 +80,82 @@ export default function BreakingNewsPage() {
     }
   };
 
-  // Edit
   const handleEdit = (item: BreakingNews) => {
     setText(item.text);
     setPriority(item.priority);
     setEditId(item._id);
   };
 
-  // Active news for marquee
   const activeNews = newsList.filter((item) => item.isActive);
 
-  // Filtered news for search
   const filteredNews = newsList.filter((item) =>
     item.text.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* PUBLIC FACING MARQUEE */}
-    {activeNews.length > 0 && (
-  <div className="bg-red-600 text-white overflow-hidden py-3 px-4 h-12 flex items-center">
-    <div className="relative w-full">
-      <div className="absolute whitespace-nowrap animate-marquee">
-        {activeNews.map((item, idx) => (
-          <span
-            key={item._id}
-            className="mx-6 font-bold text-sm md:text-base uppercase"
-          >
-            {item.text}
-          </span>
-        ))}
-      </div>
-    </div>
-    <style jsx>{`
-      .animate-marquee {
-        display: inline-block;
-        white-space: nowrap;
-        animation: marquee 35s linear infinite;
-      }
-      @keyframes marquee {
-        0% {
-          transform: translateX(100%);
-        }
-        100% {
-          transform: translateX(-100%);
-        }
-      }
-    `}</style>
-  </div>
-)}
-      {/* ADMIN PANEL */}
-      <div className="p-6">
-        <h1 className="text-3xl font-bold mb-6 text-red-600">
-          STAR NEWS - BREAKING HEADLINES ADMIN 
+
+      {/* 🔴 MARQUEE */}
+      {activeNews.length > 0 && (
+        <div className="bg-red-600 text-white overflow-hidden py-2 px-3 h-10 flex items-center">
+          <div className="relative w-full">
+            <div className="absolute whitespace-nowrap animate-marquee">
+              {activeNews.map((item) => (
+                <span
+                  key={item._id}
+                  className="mx-4 font-bold text-xs uppercase"
+                >
+                  {item.text}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <style jsx>{`
+            .animate-marquee {
+              display: inline-block;
+              white-space: nowrap;
+              animation: marquee 35s linear infinite;
+            }
+            @keyframes marquee {
+              0% { transform: translateX(100%); }
+              100% { transform: translateX(-100%); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* ADMIN */}
+      <div className="p-4">
+
+        <h1 className="text-xl font-bold mb-5 text-red-600">
+          BREAKING NEWS ADMIN
         </h1>
 
-        {/* Add/Edit Form */}
+        {/* FORM */}
         <form
           onSubmit={handleSubmit}
-          className="mb-6 bg-white p-4 rounded shadow flex flex-col md:flex-row md:items-center gap-4"
+          className="mb-5 bg-white p-4 rounded shadow flex flex-col gap-3"
         >
           <input
             type="text"
             placeholder="Enter headline..."
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="border rounded px-3 py-2 text-sm"
           />
+
           <input
             type="number"
-            placeholder="Priority"
             value={priority}
             onChange={(e) => setPriority(Number(e.target.value))}
-            className="w-24 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="border rounded px-3 py-2 text-sm"
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-          >
+
+          <button className="bg-red-600 text-white py-2 rounded">
             {editId ? "Update" : "Add"}
           </button>
+
           {editId && (
             <button
               type="button"
@@ -173,84 +164,111 @@ export default function BreakingNewsPage() {
                 setPriority(1);
                 setEditId(null);
               }}
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition"
+              className="bg-gray-400 text-white py-2 rounded"
             >
               Cancel
             </button>
           )}
         </form>
 
-        {/* Search */}
+        {/* SEARCH */}
         <div className="mb-4 flex items-center gap-2">
-          <Search className="text-gray-500" />
+          <Search />
           <input
             type="text"
-            placeholder="Search headlines..."
+            placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border rounded px-3 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="border px-3 py-2 rounded w-full text-sm"
           />
         </div>
 
-        {/* Breaking News Table */}
-        <div className="bg-white shadow rounded overflow-x-auto">
-          <table className="min-w-full table-auto">
+        {/* ✅ DESKTOP TABLE */}
+        <div className="hidden md:block bg-white shadow rounded">
+          <table className="w-full text-sm">
             <thead className="bg-red-600 text-white">
               <tr>
-                <th className="px-4 py-2 w-12">#</th>
+                <th className="px-4 py-2">#</th>
                 <th className="px-4 py-2 text-left">Headline</th>
-                <th className="px-4 py-2 text-center w-24">Priority</th>
-                <th className="px-4 py-2 text-center w-20">Active</th>
-                <th className="px-4 py-2 text-center w-32">Actions</th>
+                <th className="px-4 py-2">Priority</th>
+                <th className="px-4 py-2">Active</th>
+                <th className="px-4 py-2">Actions</th>
               </tr>
             </thead>
+
             <tbody>
-              {filteredNews.length > 0 ? (
-                filteredNews.map((item, idx) => (
-                  <tr
-                    key={item._id}
-                    className={`${
-                      idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    } ${item.isActive ? "font-semibold" : "text-gray-400"}`}
-                  >
-                    <td className="px-4 py-2">{idx + 1}</td>
-                    <td className="px-4 py-2">{item.text}</td>
-                    <td className="px-4 py-2 text-center">{item.priority}</td>
-                    <td className="px-4 py-2 text-center">
-                      <button onClick={() => handleToggle(item._id)}>
-                        {item.isActive ? (
-                          <ToggleRight className="text-green-500 inline-block" />
-                        ) : (
-                          <ToggleLeft className="text-red-500 inline-block" />
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-4 py-2 text-center flex justify-center gap-2">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <Edit />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="text-center py-4 text-gray-500">
-                    No headlines found
+              {filteredNews.map((item, idx) => (
+                <tr key={item._id}>
+                  <td className="px-4 py-2">{idx + 1}</td>
+                  <td className="px-4 py-2">{item.text}</td>
+                  <td className="px-4 py-2 text-center">{item.priority}</td>
+
+                  <td className="px-4 py-2 text-center">
+                    <button onClick={() => handleToggle(item._id)}>
+                      {item.isActive ? (
+                        <ToggleRight className="text-green-500" />
+                      ) : (
+                        <ToggleLeft className="text-red-500" />
+                      )}
+                    </button>
+                  </td>
+
+                  <td className="px-4 py-2 flex justify-center gap-2">
+                    <Edit
+                      className="text-blue-500 cursor-pointer"
+                      onClick={() => handleEdit(item)}
+                    />
+                    <Trash2
+                      className="text-red-500 cursor-pointer"
+                      onClick={() => handleDelete(item._id)}
+                    />
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+
+        {/* 📱 MOBILE CARD */}
+        <div className="md:hidden space-y-3">
+          {filteredNews.map((item, idx) => (
+            <div
+              key={item._id}
+              className="bg-white p-3 rounded shadow space-y-2"
+            >
+              <div className="flex justify-between text-xs">
+                <span>#{idx + 1}</span>
+                <span>Priority: {item.priority}</span>
+              </div>
+
+              <p className="text-sm font-medium break-words">
+                {item.text}
+              </p>
+
+              <div className="flex justify-between items-center">
+                <button onClick={() => handleToggle(item._id)}>
+                  {item.isActive ? (
+                    <ToggleRight className="text-green-500" />
+                  ) : (
+                    <ToggleLeft className="text-red-500" />
+                  )}
+                </button>
+
+                <div className="flex gap-3">
+                  <Edit
+                    className="text-blue-500"
+                    onClick={() => handleEdit(item)}
+                  />
+                  <Trash2
+                    className="text-red-500"
+                    onClick={() => handleDelete(item._id)}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
