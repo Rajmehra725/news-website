@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+const socket = io("https://starnewsbackend.onrender.com");
 
 type Comment = {
   _id: string;
@@ -41,7 +41,7 @@ export default function NewsPage() {
 
   // 📥 FETCH NEWS
   const fetchNews = async () => {
-    const res = await axios.get("http://localhost:5000/api/news");
+    const res = await axios.get("https://starnewsbackend.onrender.com/api/news");
     setNewsList(res.data);
 
     // join socket rooms
@@ -113,7 +113,7 @@ export default function NewsPage() {
     socket.emit("joinNews", id);
 
     await axios.post(
-      `http://localhost:5000/api/interactions/view/${id}`,
+      `https://starnewsbackend.onrender.com/api/interactions/view/${id}`,
       { visitorId }
     );
   };
@@ -121,7 +121,7 @@ export default function NewsPage() {
   // ❤️ LIKE
   const handleLike = async (id: string) => {
     await axios.post(
-      `http://localhost:5000/api/interactions/like/${id}`,
+      `https://starnewsbackend.onrender.com/api/interactions/like/${id}`,
       { visitorId }
     );
   };
@@ -131,7 +131,7 @@ export default function NewsPage() {
     if (!text) return;
 
     await axios.post(
-      `http://localhost:5000/api/interactions/comment/${id}`,
+      `https://starnewsbackend.onrender.com/api/interactions/comment/${id}`,
       { text, visitorId }
     );
   };
@@ -139,14 +139,14 @@ export default function NewsPage() {
   // ❌ DELETE
   const deleteComment = async (nid: string, cid: string) => {
     await axios.delete(
-      `http://localhost:5000/api/interactions/comment/${nid}/${cid}`
+      `https://starnewsbackend.onrender.com/api/interactions/comment/${nid}/${cid}`
     );
   };
 
   // 🔗 SHARE
   const handleShare = async (news: News) => {
     await axios.post(
-      `http://localhost:5000/api/interactions/share/${news._id}`,
+      `https://starnewsbackend.onrender.com/api/interactions/share/${news._id}`,
       { visitorId }
     );
 

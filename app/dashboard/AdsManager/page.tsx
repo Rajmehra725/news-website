@@ -22,7 +22,7 @@ export default function AdsManager() {
   // 🔹 Fetch
   const fetchAds = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/ads");
+      const res = await axios.get("https://starnewsbackend.onrender.com/api/ads");
       setAds(
         res.data.sort(
           (a: Ad, b: Ad) =>
@@ -50,7 +50,7 @@ export default function AdsManager() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/ads",
+        "https://starnewsbackend.onrender.com/api/ads",
         formData
       );
 
@@ -71,7 +71,7 @@ export default function AdsManager() {
     formData.append("title", title);
 
     const res = await axios.put(
-      `http://localhost:5000/api/ads/${id}`,
+      `https://starnewsbackend.onrender.com/api/ads/${id}`,
       formData
     );
 
@@ -83,7 +83,7 @@ export default function AdsManager() {
   // 🔹 Toggle
   const toggleAd = async (id: string) => {
     const res = await axios.patch(
-      `http://localhost:5000/api/ads/toggle/${id}`
+      `https://starnewsbackend.onrender.com/api/ads/toggle/${id}`
     );
 
     setAds((prev) =>
@@ -93,7 +93,7 @@ export default function AdsManager() {
 
   // 🔹 Delete
   const deleteAd = async (id: string) => {
-    await axios.delete(`http://localhost:5000/api/ads/${id}`);
+    await axios.delete(`https://starnewsbackend.onrender.com/api/ads/${id}`);
     setAds((prev) => prev.filter((a) => a._id !== id));
   };
 

@@ -11,7 +11,7 @@ interface BreakingNews {
   priority: number;
 }
 
-const API_URL = "http://localhost:5000/api/breaking";
+const API_URL = "https://starnewsbackend.onrender.com/api/breaking";
 
 export default function BreakingNewsPage() {
   const [newsList, setNewsList] = useState<BreakingNews[]>([]);
