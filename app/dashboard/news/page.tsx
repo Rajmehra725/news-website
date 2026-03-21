@@ -48,7 +48,7 @@ export default function NewsPage() {
 
   // 🔥 Fetch News
   const fetchNews = async () => {
-    const res = await axios.get("http://localhost:5000/api/news");
+    const res = await axios.get("https://starnewsbackend.onrender.com/api/news");
     setNewsList(res.data);
   };
 
@@ -116,9 +116,9 @@ export default function NewsPage() {
       });
 
       if (editId) {
-        await axios.put(`http://localhost:5000/api/news/${editId}`, formData);
+        await axios.put(`https://starnewsbackend.onrender.com/api/news/${editId}`, formData);
       } else {
-        await axios.post("http://localhost:5000/api/news", formData);
+        await axios.post("https://starnewsbackend.onrender.com/api/news", formData);
       }
 
       fetchNews();
@@ -156,7 +156,7 @@ export default function NewsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete news?")) return;
 
-    await axios.delete(`http://localhost:5000/api/news/${id}`);
+    await axios.delete(`https://starnewsbackend.onrender.com/api/news/${id}`);
     fetchNews();
   };
 
@@ -202,7 +202,7 @@ export default function NewsPage() {
                 <td>
                   <button
                     onClick={async () => {
-                      await axios.put(`http://localhost:5000/api/news/view/${item._id}`);
+                      await axios.put(`https://starnewsbackend.onrender.com/api/news/view/${item._id}`);
                       fetchNews();
                     }}
                   >
@@ -213,7 +213,7 @@ export default function NewsPage() {
                 <td>
                   <button
                     onClick={async () => {
-                      await axios.put(`http://localhost:5000/api/news/share/${item._id}`);
+                      await axios.put(`https://starnewsbackend.onrender.com/api/news/share/${item._id}`);
                       fetchNews();
                     }}
                   >

@@ -166,7 +166,7 @@ export default function AdsManager() {
                   src={
                     ad.image.startsWith("http")
                       ? ad.image
-                      : `http://localhost:5000/${ad.image}`
+                      : `https://starnewsbackend.onrender.com/${ad.image}`
                   }
                   className="h-16 w-32 mt-2 rounded"
                 />
