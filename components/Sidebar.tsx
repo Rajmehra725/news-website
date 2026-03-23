@@ -10,6 +10,7 @@ import {
   X,
   Image,
   Newspaper,
+  LucideSquareUser
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -22,6 +23,7 @@ export default function Sidebar() {
     { name: "News", path: "/dashboard/news", icon: FileText },
     { name: "Ads", path: "/dashboard/AdsManager", icon: Image },
     { name: "Breaking", path: "/dashboard/BreakingManager", icon: Newspaper },
+     { name: "UserSubmit", path: "/dashboard/newsSubmit", icon: LucideSquareUser },
   ];
 
   return (
