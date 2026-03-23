@@ -6,7 +6,7 @@ export default function AdminNews() {
   const [news, setNews] = useState<any[]>([]);
 
   const fetchNews = async () => {
-    const res = await fetch("http://localhost:5000/api/newsSubmit");
+    const res = await fetch("https://starnewsbackend.onrender.com/api/newsSubmit");
     const data = await res.json();
     setNews(data);
   };
@@ -16,21 +16,21 @@ export default function AdminNews() {
   }, []);
 
   const approve = async (id: string) => {
-    await fetch(`http://localhost:5000/api/newsSubmit/approve/${id}`, {
+    await fetch(`https://starnewsbackend.onrender.com/api/newsSubmit/approve/${id}`, {
       method: "PUT",
     });
     fetchNews();
   };
 
   const reject = async (id: string) => {
-    await fetch(`http://localhost:5000/api/newsSubmit/reject/${id}`, {
+    await fetch(`https://starnewsbackend.onrender.com/api/newsSubmit/reject/${id}`, {
       method: "PUT",
     });
     fetchNews();
   };
 
   const deleteNews = async (id: string) => {
-    await fetch(`http://localhost:5000/api/newsSubmit/${id}`, {
+    await fetch(`https://starnewsbackend.onrender.com/api/newsSubmit/${id}`, {
       method: "DELETE",
     });
     fetchNews();
