@@ -11,7 +11,8 @@ import {
   Image,
   Newspaper,
   LucideSquareUser,
-  IdCardIcon
+  IdCardIcon,
+  PanelLeftRightDashedIcon
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -26,6 +27,7 @@ export default function Sidebar() {
     { name: "Breaking", path: "/dashboard/BreakingManager", icon: Newspaper },
      { name: "UserSubmit", path: "/dashboard/newsSubmit", icon: LucideSquareUser },
       { name: "ID Card", path: "/dashboard/idcard", icon: IdCardIcon },
+       { name: "Banner Ad", path: "/dashboard/bannerAd", icon: PanelLeftRightDashedIcon },
   ];
 
   return (
