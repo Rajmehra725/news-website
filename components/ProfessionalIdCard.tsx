@@ -56,7 +56,7 @@ const ProfessionalIdCard = forwardRef<HTMLDivElement, ProfessionalIdCardProps>(
 
         {/* Signature */}
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-gray-500 z-10">
-          Editor Signature
+         Signature
         </div>
       </div>
     );
