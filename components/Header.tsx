@@ -1,69 +1,120 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { useState } from "react";
+import { Search, LogOut, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
+  const router = useRouter();
+
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogout = async () => {
+    setLoading(true);
+
+    try {
+      // simulate API / cleanup
+      await new Promise((res) => setTimeout(res, 1200));
+
+      localStorage.removeItem("adminToken");
+
+      router.push("/");
+    } catch {
+      setLoading(false);
+    }
+  };
+
   return (
-    <header className="flex items-center justify-between bg-white border-b px-4 md:px-6 py-3 shadow-sm sticky top-0 z-40">
+    <>
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 bg-white border-b">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6 py-3">
 
-      {/* 🔴 LEFT: LOGO + TITLE */}
-      <div className="flex items-center gap-3">
-        {/* Logo */}
-        <div className="bg-red-600 text-white px-3 py-1 rounded font-bold text-sm tracking-wide">
-          STAR NEWS
-        </div>
-
-        {/* Desktop Title */}
-        <h2 className="hidden md:block text-lg font-semibold text-gray-800">
-          Admin Dashboard
-        </h2>
-      </div>
-
-      {/* 🔍 CENTER SEARCH (Desktop) */}
-      <div className="hidden md:flex items-center bg-gray-100 px-3 py-2 rounded-md w-full max-w-md mx-6">
-        <Search size={16} className="text-gray-500" />
-        <input
-          type="text"
-          placeholder="Search news, categories..."
-          className="bg-transparent outline-none text-sm ml-2 w-full"
-        />
-      </div>
-
-      {/* RIGHT */}
-      <div className="flex items-center gap-4">
-
-        {/* 🔍 Mobile Search Icon */}
-        <div className="md:hidden bg-gray-100 p-2 rounded-full cursor-pointer">
-          <Search size={18} className="text-gray-700" />
-        </div>
-
-        {/* 🔔 Notifications */}
-        <div className="relative cursor-pointer">
-          <Bell size={20} className="text-gray-700" />
-          <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-[1px] rounded-full">
-            3
-          </span>
-        </div>
-
-        {/* 👤 Profile */}
-        <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded-lg transition">
-          <img
-            src="https://i.pravatar.cc/40"
-            alt="admin"
-            className="w-8 h-8 rounded-full border"
-          />
-
-          {/* Desktop Info */}
-          <div className="hidden md:flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-gray-800">
-              Admin
-            </span>
-            <span className="text-xs text-gray-500">
-              Editor Panel
+          {/* LEFT */}
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold text-gray-900">
+              STAR NEWS
+            </h1>
+            <span className="hidden md:block text-sm text-gray-500">
+              Admin Panel
             </span>
           </div>
+
+          {/* SEARCH */}
+          <div className="flex-1 max-w-md mx-6 hidden md:block">
+            <div className="flex items-center border rounded-md px-3 py-2 bg-gray-50">
+              <Search size={16} className="text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="bg-transparent outline-none text-sm ml-2 w-full"
+              />
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div className="flex items-center gap-4">
+
+            <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
+              <img
+                src="https://i.pravatar.cc/40"
+                className="w-8 h-8 rounded-full border"
+              />
+              <span className="font-medium">Admin</span>
+            </div>
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1 text-sm text-gray-600 hover:text-red-600 transition"
+            >
+              <LogOut size={16} />
+              <span className="hidden md:block">Logout</span>
+            </button>
+
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* 🔥 LOGOUT MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95">
+
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              Confirm Logout
+            </h2>
+
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to logout from admin panel?
+            </p>
+
+            <div className="flex justify-end gap-3">
+
+              {/* Cancel */}
+              <button
+                onClick={() => setShowModal(false)}
+                disabled={loading}
+                className="px-4 py-2 text-sm rounded-md border text-gray-600 hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+
+              {/* Confirm Logout */}
+              <button
+                onClick={handleLogout}
+                disabled={loading}
+                className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 transition flex items-center gap-2"
+              >
+                {loading && <Loader2 size={16} className="animate-spin" />}
+                {loading ? "Logging out..." : "Logout"}
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
