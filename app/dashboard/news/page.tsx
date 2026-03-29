@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+type Section = {
+  heading?: string;
+  content: string;
+  image?: string;
+  bgColor?: string;
+  textColor?: string;
+};
+
 type News = {
   _id: string;
   title: string;
@@ -12,6 +20,7 @@ type News = {
   status: string;
   featuredImage: string;
   images: string[];
+  sections?: Section[];
   views: number;
   shares: number;
   createdAt: string;
@@ -45,6 +54,15 @@ export default function NewsPage() {
     status: "draft",
     featuredImage: "",
     images: [],
+    sections: [
+      {
+        heading: "",
+        content: "",
+        image: "",
+        bgColor: "#ffffff",
+        textColor: "#000000",
+      },
+    ],
   });
 
   const fetchNews = async () => {
@@ -93,7 +111,6 @@ export default function NewsPage() {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ FIXED EDIT FUNCTION
   const handleEdit = (item: News) => {
     setForm({
       title: item.title || "",
@@ -103,6 +120,18 @@ export default function NewsPage() {
       status: item.status || "draft",
       featuredImage: item.featuredImage || "",
       images: item.images || [],
+      sections:
+        item.sections && item.sections.length > 0
+          ? item.sections
+          : [
+              {
+                heading: "",
+                content: "",
+                image: "",
+                bgColor: "#ffffff",
+                textColor: "#000000",
+              },
+            ],
     });
 
     setFeaturedFile(null);
@@ -110,6 +139,28 @@ export default function NewsPage() {
 
     setEditId(item._id);
     setOpen(true);
+  };
+
+  const handleSectionChange = (index: number, field: string, value: string) => {
+    const newSections = [...form.sections];
+    (newSections[index] as any)[field] = value;
+    setForm({ ...form, sections: newSections });
+  };
+
+  const addSection = () => {
+    setForm({
+      ...form,
+      sections: [
+        ...form.sections,
+        { heading: "", content: "", image: "", bgColor: "#ffffff", textColor: "#000000" },
+      ],
+    });
+  };
+
+  const removeSection = (index: number) => {
+    const newSections = [...form.sections];
+    newSections.splice(index, 1);
+    setForm({ ...form, sections: newSections });
   };
 
   const handleSubmit = async () => {
@@ -124,6 +175,7 @@ export default function NewsPage() {
       formData.append("category", form.category);
       formData.append("content", form.content);
       formData.append("status", form.status);
+      formData.append("sections", JSON.stringify(form.sections)); // ✅ sections
 
       if (featuredFile) {
         formData.append("featuredImage", featuredFile);
@@ -165,6 +217,9 @@ export default function NewsPage() {
       status: "draft",
       featuredImage: "",
       images: [],
+      sections: [
+        { heading: "", content: "", image: "", bgColor: "#ffffff", textColor: "#000000" },
+      ],
     });
     setFeaturedFile(null);
     setImageFiles([]);
@@ -180,7 +235,6 @@ export default function NewsPage() {
 
   return (
     <div className="p-4 sm:p-6 bg-black text-white min-h-screen">
-
       <div className="flex flex-col sm:flex-row justify-between gap-3 mb-6">
         <h1 className="text-xl sm:text-3xl font-bold">📰 News</h1>
         <button
@@ -225,7 +279,6 @@ export default function NewsPage() {
 
                   <td className="flex gap-2">
                     <button onClick={() => handleEdit(item)}>Edit</button>
-
                     <button onClick={() => handleDelete(item._id)}>
                       {loadingId === item._id ? "..." : "Delete"}
                     </button>
@@ -254,7 +307,6 @@ export default function NewsPage() {
 
               <div className="flex justify-between">
                 <button onClick={() => handleEdit(item)}>Edit</button>
-
                 <button onClick={() => handleDelete(item._id)}>
                   {loadingId === item._id ? "..." : "Delete"}
                 </button>
@@ -267,22 +319,53 @@ export default function NewsPage() {
       {open && (
         <div className="fixed inset-0 z-[9999] bg-black/80 flex justify-center items-center p-3">
           <div className="bg-gray-900 p-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded">
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder="Title"
+              className="w-full mb-2 p-2 bg-gray-800"
+            />
 
-            <input name="title" value={form.title} onChange={handleChange} placeholder="Title" className="w-full mb-2 p-2 bg-gray-800" />
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              placeholder="Description"
+              className="w-full mb-2 p-2 bg-gray-800"
+            />
 
-            <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="w-full mb-2 p-2 bg-gray-800" />
+            <textarea
+              name="content"
+              value={form.content}
+              onChange={handleChange}
+              placeholder="Content"
+              className="w-full mb-2 p-2 bg-gray-800"
+            />
 
-            <textarea name="content" value={form.content} onChange={handleChange} placeholder="Content" className="w-full mb-2 p-2 bg-gray-800" />
-
-            <select name="category" value={form.category} onChange={handleChange} className="w-full mb-2 p-2 bg-gray-800">
+            <select
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className="w-full mb-2 p-2 bg-gray-800"
+            >
               <option value="">Select</option>
-              {categories.map((c) => <option key={c}>{c}</option>)}
+              {categories.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
             </select>
 
             <input type="file" onChange={handleFeatured} />
-            {form.featuredImage && <img src={form.featuredImage} className="h-24 mt-2" />}
+            {form.featuredImage && (
+              <img src={form.featuredImage} className="h-24 mt-2" />
+            )}
 
-            <input type="file" multiple onChange={handleImage} className="mt-2" />
+            <input
+              type="file"
+              multiple
+              onChange={handleImage}
+              className="mt-2"
+            />
 
             <div className="flex flex-wrap gap-2 mt-2">
               {form.images.map((img: string, i: number) => (
@@ -293,7 +376,70 @@ export default function NewsPage() {
               ))}
             </div>
 
-            <button onClick={handleSubmit} className="bg-green-600 mt-4 px-4 py-2 w-full">
+            {/* 🔥 Sections Editor */}
+            <div className="mt-4 space-y-3">
+              <h3 className="font-bold">Sections</h3>
+              {form.sections.map((section: Section, idx: number) => (
+                <div key={idx} className="border p-2 rounded space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Heading"
+                    value={section.heading}
+                    onChange={(e) =>
+                      handleSectionChange(idx, "heading", e.target.value)
+                    }
+                    className="w-full p-1 bg-gray-800"
+                  />
+                  <textarea
+                    placeholder="Content"
+                    value={section.content}
+                    onChange={(e) =>
+                      handleSectionChange(idx, "content", e.target.value)
+                    }
+                    className="w-full p-1 bg-gray-800"
+                  />
+                  <div className="flex gap-2">
+                    <label className="flex items-center gap-1">
+                      BG Color
+                      <input
+                        type="color"
+                        value={section.bgColor}
+                        onChange={(e) =>
+                          handleSectionChange(idx, "bgColor", e.target.value)
+                        }
+                      />
+                    </label>
+                    <label className="flex items-center gap-1">
+                      Text Color
+                      <input
+                        type="color"
+                        value={section.textColor}
+                        onChange={(e) =>
+                          handleSectionChange(idx, "textColor", e.target.value)
+                        }
+                      />
+                    </label>
+                    <button
+                      onClick={() => removeSection(idx)}
+                      className="bg-red-600 px-2 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={addSection}
+                className="bg-green-600 px-4 py-1 rounded"
+              >
+                + Add Section
+              </button>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              className="bg-green-600 mt-4 px-4 py-2 w-full"
+            >
               {saving ? "Saving..." : "Save"}
             </button>
 
@@ -307,7 +453,6 @@ export default function NewsPage() {
             >
               Cancel
             </button>
-
           </div>
         </div>
       )}
