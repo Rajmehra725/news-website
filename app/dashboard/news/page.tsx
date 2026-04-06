@@ -163,50 +163,55 @@ export default function NewsPage() {
     setForm({ ...form, sections: newSections });
   };
 
-  const handleSubmit = async () => {
-    if (!form.title || !form.description) return alert("Required");
+  const handleSubmit = async (statusType = "draft") => {
+  if (!form.title || !form.description) return alert("Required");
 
-    setSaving(true);
-    try {
-      const formData = new FormData();
+  setSaving(true);
+  try {
+    const formData = new FormData();
 
-      formData.append("title", form.title);
-      formData.append("description", form.description);
-      formData.append("category", form.category);
-      formData.append("content", form.content);
-      formData.append("status", form.status);
-      formData.append("sections", JSON.stringify(form.sections)); // ✅ sections
+    formData.append("title", form.title);
+    formData.append("description", form.description);
+    formData.append("category", form.category);
+    formData.append("content", form.content);
 
-      if (featuredFile) {
-        formData.append("featuredImage", featuredFile);
-      }
+    // 🔥 सबसे important fix
+    formData.append("status", statusType);
 
-      imageFiles.forEach((file) => {
-        formData.append("images", file);
-      });
+    formData.append("sections", JSON.stringify(form.sections));
 
-      if (editId) {
-        await axios.put(
-          `https://starnewsbackend.onrender.com/api/news/${editId}`,
-          formData
-        );
-      } else {
-        await axios.post(
-          "https://starnewsbackend.onrender.com/api/news",
-          formData
-        );
-      }
-
-      fetchNews();
-      setOpen(false);
-      setEditId(null);
-      resetForm();
-    } catch {
-      alert("Error");
-    } finally {
-      setSaving(false);
+    if (featuredFile) {
+      formData.append("featuredImage", featuredFile);
     }
-  };
+
+    imageFiles.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    console.log("🚀 Sending status:", statusType);
+
+    if (editId) {
+      await axios.put(
+        `https://starnewsbackend.onrender.com/api/news/${editId}`,
+        formData
+      );
+    } else {
+      await axios.post(
+        "https://starnewsbackend.onrender.com/api/news",
+        formData
+      );
+    }
+
+    fetchNews();
+    setOpen(false);
+    setEditId(null);
+    resetForm();
+  } catch {
+    alert("Error");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const resetForm = () => {
     setForm({
@@ -436,12 +441,29 @@ export default function NewsPage() {
               </button>
             </div>
 
-            <button
-              onClick={handleSubmit}
-              className="bg-green-600 mt-4 px-4 py-2 w-full"
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
+            <div className="flex gap-3 mt-4">
+  {/* Draft Button */}
+  <button
+    onClick={() => handleSubmit("draft")}
+    disabled={saving}
+    className={`px-4 py-2 rounded text-white ${
+      saving ? "bg-gray-400 cursor-not-allowed" : "bg-gray-500"
+    }`}
+  >
+    {saving ? "Saving..." : "Save Draft"}
+  </button>
+
+  {/* Publish Button */}
+  <button
+    onClick={() => handleSubmit("published")}
+    disabled={saving}
+    className={`px-4 py-2 rounded text-white ${
+      saving ? "bg-green-400 cursor-not-allowed" : "bg-green-600"
+    }`}
+  >
+    {saving ? "Publishing..." : "🚀 Publish & Send Notification"}
+  </button>
+</div>
 
             <button
               onClick={() => {
