@@ -7,10 +7,13 @@ type Section = {
   heading?: string;
   content: string;
   image?: string;
-  bgColor?: string;
-  textColor?: string;
-};
 
+  headingBgColor?: string;
+  headingTextColor?: string;
+
+  contentBgColor?: string;
+  contentTextColor?: string;
+};
 type News = {
   _id: string;
   title: string;
@@ -152,7 +155,15 @@ export default function NewsPage() {
       ...form,
       sections: [
         ...form.sections,
-        { heading: "", content: "", image: "", bgColor: "#ffffff", textColor: "#000000" },
+        {
+  heading: "",
+  content: "",
+  image: "",
+  headingBgColor: "#ffffff",
+  headingTextColor: "#000000",
+  contentBgColor: "#ffffff",
+  contentTextColor: "#000000",
+},
       ],
     });
   };
@@ -223,7 +234,15 @@ export default function NewsPage() {
       featuredImage: "",
       images: [],
       sections: [
-        { heading: "", content: "", image: "", bgColor: "#ffffff", textColor: "#000000" },
+       {
+  heading: "",
+  content: "",
+  image: "",
+  headingBgColor: "#ffffff",
+  headingTextColor: "#000000",
+  contentBgColor: "#ffffff",
+  contentTextColor: "#000000",
+},
       ],
     });
     setFeaturedFile(null);
@@ -403,27 +422,51 @@ export default function NewsPage() {
                     }
                     className="w-full p-1 bg-gray-800"
                   />
-                  <div className="flex gap-2">
-                    <label className="flex items-center gap-1">
-                      BG Color
-                      <input
-                        type="color"
-                        value={section.bgColor}
-                        onChange={(e) =>
-                          handleSectionChange(idx, "bgColor", e.target.value)
-                        }
-                      />
-                    </label>
-                    <label className="flex items-center gap-1">
-                      Text Color
-                      <input
-                        type="color"
-                        value={section.textColor}
-                        onChange={(e) =>
-                          handleSectionChange(idx, "textColor", e.target.value)
-                        }
-                      />
-                    </label>
+                 <div className="grid grid-cols-2 gap-2">
+
+  <label className="flex items-center gap-1 text-xs">
+    Heading BG
+    <input
+      type="color"
+      value={section.headingBgColor}
+      onChange={(e) =>
+        handleSectionChange(idx, "headingBgColor", e.target.value)
+      }
+    />
+  </label>
+
+  <label className="flex items-center gap-1 text-xs">
+    Heading Text
+    <input
+      type="color"
+      value={section.headingTextColor}
+      onChange={(e) =>
+        handleSectionChange(idx, "headingTextColor", e.target.value)
+      }
+    />
+  </label>
+
+  <label className="flex items-center gap-1 text-xs">
+    Content BG
+    <input
+      type="color"
+      value={section.contentBgColor}
+      onChange={(e) =>
+        handleSectionChange(idx, "contentBgColor", e.target.value)
+      }
+    />
+  </label>
+
+  <label className="flex items-center gap-1 text-xs">
+    Content Text
+    <input
+      type="color"
+      value={section.contentTextColor}
+      onChange={(e) =>
+        handleSectionChange(idx, "contentTextColor", e.target.value)
+      }
+    />
+  </label>
                     <button
                       onClick={() => removeSection(idx)}
                       className="bg-red-600 px-2 rounded"
