@@ -8,7 +8,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-const API = "https://starnewsbackend.onrender.com/api/banners";
+const API = "http://localhost:5000/api/banners";
 
 export default function AdminBanners() {
   const [banners, setBanners] = useState<any[]>([]);
@@ -221,11 +221,23 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
               <div className="border rounded-lg overflow-hidden">
 
-                <img
-                  src={banner.image}
-                  className="w-full h-60 md:h-72 object-cover"
-                  onClick={() => view(banner._id)}
-                />
+              {banner.type === "video" ? (
+  <video
+    src={banner.url || banner.image}
+    className="w-full h-60 md:h-72 object-cover"
+    autoPlay
+    muted
+    loop
+    playsInline
+    onClick={() => view(banner._id)}
+  />
+) : (
+  <img
+    src={banner.url || banner.image}
+    className="w-full h-60 md:h-72 object-cover"
+    onClick={() => view(banner._id)}
+  />
+)}
 
                 <div className="p-3 space-y-2">
 
