@@ -8,7 +8,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-const API = "http://localhost:5000/api/banners";
+const API = "https://starnewsbackend.onrender.com/api/banners";
 
 export default function AdminBanners() {
   const [banners, setBanners] = useState<any[]>([]);
