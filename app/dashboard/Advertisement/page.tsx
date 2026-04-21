@@ -1,264 +1,303 @@
 "use client";
 
-import { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
 
-type Ad = {
-  _id?: string;
-  title: string;
-  link: string;
-  position: "top" | "middle" | "bottom";
-  image?: string;
-  video?: string;
-  mediaType: "image" | "video";
-};
+import "swiper/css";
+import "swiper/css/pagination";
 
-export default function AdvertisementAdmin() {
-  const API = "https://starnewsbackend.onrender.com/api/advertisement";
+const API = "https://starnewsbackend.onrender.com/api/advertisement";
 
-  const [ads, setAds] = useState<Ad[]>([]);
-  const [file, setFile] = useState<File | null>(null);
-  const [mediaType, setMediaType] = useState<"image" | "video">("image");
-  const [loading, setLoading] = useState(false);
+export default function AdminAdvertisements() {
+  const [ads, setAds] = useState<any[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [preview, setPreview] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
 
-  const [form, setForm] = useState<Ad>({
-    title: "",
-    link: "",
-    position: "middle",
-    mediaType: "image",
-    image: "",
-    video: ""
-  });
+  const [title, setTitle] = useState("");
+  const [link, setLink] = useState("");
+  const [position, setPosition] = useState("middle");
 
-  const [editId, setEditId] = useState<string | null>(null);
-
-  // 🔄 GET ADS
-  const fetchAds = async () => {
-    const res = await fetch(API);
-    const data = await res.json();
-    setAds(data);
-  };
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchAds();
   }, []);
 
-  // ✏️ INPUT
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // 📁 FILE
-  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  // 🚀 CREATE / UPDATE
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  // FETCH ADS
+  const fetchAds = async () => {
     setLoading(true);
-
-    const data = new FormData();
-    data.append("title", form.title);
-    data.append("link", form.link);
-    data.append("position", form.position);
-    data.append("mediaType", mediaType);
-
-    if (file) {
-      data.append("file", file); // 👈 backend expects "file"
-    }
-
-    let url = API;
-    let method = "POST";
-
-    if (editId) {
-      url = `${API}/${editId}`;
-      method = "PUT";
-    }
-
-    await fetch(url, {
-      method,
-      body: data
-    });
-
-    setForm({
-      title: "",
-      link: "",
-      position: "middle",
-      mediaType: "image",
-      image: "",
-      video: ""
-    });
-
-    setFile(null);
-    setEditId(null);
-
-    await fetchAds();
+    const res = await axios.get(API);
+    setAds(res.data);
     setLoading(false);
   };
 
-  // ❌ DELETE
-  const handleDelete = async (id: string) => {
-    await fetch(`${API}/${id}`, { method: "DELETE" });
+  // HANDLE FILE CHANGE (IMAGE + VIDEO PREVIEW)
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    const selectedFiles = Array.from(e.target.files) as File[];
+
+    setFiles(selectedFiles);
+
+    const urls = selectedFiles.map((file) =>
+      URL.createObjectURL(file)
+    );
+
+    setPreview(urls);
+  };
+
+  // UPLOAD (IMPORTANT FIX FOR VIDEO + IMAGE)
+  const upload = async () => {
+    setUploading(true);
+
+    const form = new FormData();
+
+    files.forEach((file) => {
+      if (file.type.startsWith("video")) {
+        form.append("video", file);
+      } else {
+        form.append("images", file);
+      }
+    });
+
+    form.append("title", title);
+    form.append("link", link);
+    form.append("position", position);
+
+    await axios.post(API, form);
+
+    setFiles([]);
+    setPreview([]);
+    setTitle("");
+    setLink("");
+    setPosition("middle");
+
+    setUploading(false);
     fetchAds();
   };
 
-  // ✏️ EDIT
-  const handleEdit = (ad: Ad) => {
-    setForm(ad);
-    setMediaType(ad.mediaType);
-    setEditId(ad._id || null);
+  // UPDATE AD
+  const updateAd = async (id: string, file: File) => {
+    setUploading(true);
+
+    const form = new FormData();
+    form.append("image", file);
+
+    await axios.put(`${API}/${id}`, form);
+
+    setUploading(false);
+    fetchAds();
+  };
+
+  // DELETE SINGLE
+  const deleteAd = async (id: string) => {
+    await axios.delete(`${API}/${id}`);
+    fetchAds();
+  };
+
+  // DELETE MULTIPLE
+  const deleteMultiple = async () => {
+    await axios.post(`${API}/delete-multiple`, {
+      ids: selected,
+    });
+
+    setSelected([]);
+    fetchAds();
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) =>
+      prev.includes(id)
+        ? prev.filter((i) => i !== id)
+        : [...prev, id]
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 md:ml-64 p-4 md:p-6">
+    <div className="p-3 md:p-6 space-y-6">
 
-      {/* HEADER */}
-      <div className="bg-red-600 text-white p-4 rounded-xl shadow mb-6">
-        <h1 className="text-xl md:text-2xl font-bold">
-          STAR NEWS - Advertisement Panel
-        </h1>
-      </div>
+      <h1 className="text-xl md:text-2xl font-bold">
+        Advertisement Admin Panel
+      </h1>
 
       {/* FORM */}
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow mb-6">
+      <div className="border rounded-lg p-4 space-y-3">
 
-        <h2 className="text-lg font-semibold mb-4">
-          {editId ? "Update Advertisement" : "Upload Advertisement"}
-        </h2>
+        <input
+          placeholder="Ad Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="border p-2 w-full"
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <input
+          placeholder="Ad Link (https://...)"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          className="border p-2 w-full"
+        />
 
-          <input
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            placeholder="Ad Title"
-            className="border p-2 w-full rounded"
-          />
+        <select
+          value={position}
+          onChange={(e) => setPosition(e.target.value)}
+          className="border p-2 w-full"
+        >
+          <option value="top">Top</option>
+          <option value="middle">Middle</option>
+          <option value="bottom">Bottom</option>
+          <option value="sidebar">Sidebar</option>
+        </select>
 
-          <input
-            name="link"
-            value={form.link}
-            onChange={handleChange}
-            placeholder="Ad Link"
-            className="border p-2 w-full rounded"
-          />
+        <input
+          type="file"
+          multiple
+          onChange={handleChange}
+          className="w-full"
+        />
 
-          {/* MEDIA TYPE SELECT */}
-          <select
-            value={mediaType}
-            onChange={(e) =>
-              setMediaType(e.target.value as "image" | "video")
-            }
-            className="border p-2 w-full rounded"
-          >
-            <option value="image">Image</option>
-            <option value="video">Video</option>
-          </select>
+        <button
+          onClick={upload}
+          disabled={uploading}
+          className="bg-black text-white px-4 py-2 rounded"
+        >
+          {uploading ? "Uploading..." : "Upload Advertisement"}
+        </button>
 
-          {/* FILE UPLOAD */}
-          <input
-            type="file"
-            accept={mediaType === "video" ? "video/*" : "image/*"}
-            onChange={handleFile}
-            className="border p-2 w-full rounded"
-          />
+        {/* PREVIEW (IMAGE + VIDEO) */}
+        {preview.length > 0 && (
+          <Swiper slidesPerView={3} spaceBetween={10}>
+            {preview.map((file, i) => {
+              const isVideo = files[i]?.type.startsWith("video");
 
-          <select
-            name="position"
-            value={form.position}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-          >
-            <option value="top">Top</option>
-            <option value="middle">Middle</option>
-            <option value="bottom">Bottom</option>
-          </select>
+              return (
+                <SwiperSlide key={i}>
+                  {isVideo ? (
+                    <video
+                      src={file}
+                      className="h-24 w-full object-cover rounded"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      src={file}
+                      className="h-24 w-full object-cover rounded"
+                    />
+                  )}
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
+        )}
 
-          <button
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded w-full"
-          >
-            {loading
-              ? "Uploading..."
-              : editId
-              ? "Update Advertisement"
-              : "Upload Advertisement"}
-          </button>
-
-        </form>
       </div>
+
+      {/* DELETE MULTIPLE */}
+      {selected.length > 0 && (
+        <button
+          onClick={deleteMultiple}
+          className="bg-red-600 text-white px-4 py-2 rounded"
+        >
+          Delete Selected ({selected.length})
+        </button>
+      )}
+
+      {/* LOADING */}
+      {loading && (
+        <div className="h-64 bg-gray-200 animate-pulse rounded" />
+      )}
 
       {/* ADS LIST */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {!loading && (
+        <Swiper
+          modules={[Autoplay, Pagination]}
+          autoplay={{ delay: 3000 }}
+          pagination={{ clickable: true }}
+          loop
+        >
+          {ads.map((ad) => (
+            <SwiperSlide key={ad._id}>
+              <div className="border rounded-lg overflow-hidden">
 
-        {ads.map((ad) => (
-          <div
-            key={ad._id}
-            className="bg-white rounded-xl shadow overflow-hidden"
-          >
+                {/* MEDIA */}
+                {ad.mediaType === "video" ? (
+                  <video
+                    src={ad.url}
+                    className="w-full h-60 object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls
+                  />
+                ) : (
+                  <img
+                    src={ad.url}
+                    className="w-full h-60 object-cover"
+                  />
+                )}
 
-            {/* IMAGE */}
-            {ad.mediaType === "image" && ad.image && (
-              <img
-                src={`https://starnewsbackend.onrender.com${ad.image}`}
-                className="w-full h-40 object-cover"
-              />
-            )}
+                {/* INFO */}
+                <div className="p-3 space-y-2">
 
-            {/* VIDEO */}
-            {ad.mediaType === "video" && ad.video && (
-              <video
-                src={`https://starnewsbackend.onrender.com${ad.video}`}
-                className="w-full h-40 object-cover"
-                controls
-              />
-            )}
+                  <p className="font-bold">{ad.title}</p>
+                  <p className="text-sm text-gray-500">
+                    {ad.position}
+                  </p>
 
-            <div className="p-3 space-y-1">
+                  <a
+                    href={ad.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline text-sm"
+                  >
+                    Visit Ad
+                  </a>
 
-              <h3 className="font-bold">{ad.title}</h3>
+                  {/* SELECT */}
+                  <input
+                    type="checkbox"
+                    onChange={() =>
+                      toggleSelect(ad._id)
+                    }
+                  />
 
-              <p className="text-sm text-gray-500">
-                Position: {ad.position}
-              </p>
+                  {/* ACTIONS */}
+                  <div className="flex gap-2">
 
-              <a
-                href={ad.link}
-                target="_blank"
-                className="text-blue-600 text-sm"
-              >
-                Visit Link
-              </a>
+                    <label className="bg-gray-200 px-3 py-1 rounded cursor-pointer">
+                      Update
+                      <input
+                        type="file"
+                        hidden
+                        onChange={(e) =>
+                          updateAd(
+                            ad._id,
+                            e.target.files![0]
+                          )
+                        }
+                      />
+                    </label>
 
-              <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => deleteAd(ad._id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
 
-                <button
-                  onClick={() => handleEdit(ad)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded text-sm"
-                >
-                  Edit
-                </button>
+                  </div>
 
-                <button
-                  onClick={() => handleDelete(ad._id!)}
-                  className="bg-red-600 text-white px-3 py-1 rounded text-sm"
-                >
-                  Delete
-                </button>
+                </div>
 
               </div>
-
-            </div>
-
-          </div>
-        ))}
-
-      </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      )}
 
     </div>
   );

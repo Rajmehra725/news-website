@@ -42,6 +42,11 @@ export default function NewsPage() {
     "Sports",
     "Education",
     "Local",
+    "Health",
+    "Forest",
+    "Share Market",
+    "Finance",
+    "Crime Offence"
   ]);
 
   const [search, setSearch] = useState("");
