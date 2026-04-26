@@ -18,7 +18,8 @@ import {
   PinIcon,
   HdIcon,
   BoxIcon,
-  LucideAudioWaveform
+  LucideAudioWaveform,
+  BellElectricIcon,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -40,6 +41,7 @@ export default function Sidebar() {
     { name: "Banner Ad", path: "/dashboard/bannerAd", icon: PanelLeftRightDashedIcon },
     { name: "YouTube Links", path: "/dashboard/YoutubeLinkManager", icon: LucideYoutube },
     { name: "Advertisement", path: "/dashboard/Advertisement", icon: LucideAudioWaveform },
+    { name: "Notifications", path: "/dashboard/notification", icon: BellElectricIcon },
   ];
 
   return (
