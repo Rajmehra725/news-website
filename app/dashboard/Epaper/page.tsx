@@ -11,15 +11,18 @@ const API = axios.create({
 });
 
 /* =========================
-   TYPE
+   TYPES
 ========================= */
+type PageImage = {
+  public_id: string;
+  url: string;
+};
+
 type Epaper = {
   _id: string;
   title: string;
   publishDate: string;
-  image: {
-    url: string;
-  };
+  pages: PageImage[];
 };
 
 /* =========================
@@ -30,26 +33,30 @@ export default function EpaperAdmin() {
 
   const [epapers, setEpapers] = useState<Epaper[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const [title, setTitle] = useState<string>("");
-  const [publishDate, setPublishDate] = useState<string>(today); // ✅ SAFE DEFAULT
-  const [image, setImage] = useState<File | null>(null);
-
+  const [title, setTitle] = useState("");
+  const [publishDate, setPublishDate] = useState(today);
+  const [pages, setPages] = useState<File[]>([]);
+const [existingPages, setExistingPages] = useState<PageImage[]>([]);
   const [editId, setEditId] = useState<string | null>(null);
 
   /* =========================
-     FETCH
+     FETCH EPAPERS
   ========================= */
   const fetchEpapers = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
+
       const res = await API.get("/epaper");
+
       setEpapers(res.data?.epapers || []);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       setEpapers([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -57,34 +64,67 @@ export default function EpaperAdmin() {
   }, []);
 
   /* =========================
+     RESET
+  ========================= */
+  const resetForm = () => {
+  setEditId(null);
+  setTitle("");
+  setPublishDate(today);
+  setPages([]);
+  setExistingPages([]);
+};
+
+  /* =========================
      SUBMIT
   ========================= */
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("publishDate", publishDate);
+    if (!title.trim()) {
+      alert("Please enter title");
+      return;
+    }
 
-    if (image) {
-      formData.append("image", image);
+    if (!editId && pages.length === 0) {
+      alert("Please select epaper pages");
+      return;
     }
 
     try {
+      setUploading(true);
+
+      const formData = new FormData();
+
+      formData.append("title", title);
+      formData.append("publishDate", publishDate);
+
+      pages.forEach((file) => {
+        formData.append("pages", file);
+      });
+
       if (editId) {
         await API.put(`/epaper/${editId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         });
       } else {
         await API.post("/epaper", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         });
       }
 
       resetForm();
       fetchEpapers();
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -92,38 +132,40 @@ export default function EpaperAdmin() {
      DELETE
   ========================= */
   const deleteEpaper = async (id: string) => {
+    const ok = window.confirm(
+      "Are you sure you want to delete this Epaper?"
+    );
+
+    if (!ok) return;
+
     try {
       await API.delete(`/epaper/${id}`);
       fetchEpapers();
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   /* =========================
      EDIT
   ========================= */
-  const startEdit = (ep: Epaper) => {
-    setEditId(ep._id);
-    setTitle(ep.title || "");
+ const startEdit = (epaper: Epaper) => {
+  setEditId(epaper._id);
+  setTitle(epaper.title);
 
-    // ✅ SAFE DATE HANDLING (FIXED CRASH)
-    setPublishDate(
-      ep.publishDate ? ep.publishDate.split("T")[0] : today
-    );
+  setPublishDate(
+    epaper.publishDate
+      ? epaper.publishDate.split("T")[0]
+      : today
+  );
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  setExistingPages(epaper.pages || []);
 
-  /* =========================
-     RESET
-  ========================= */
-  const resetForm = () => {
-    setEditId(null);
-    setTitle("");
-    setPublishDate(today); // reset safe
-    setImage(null);
-  };
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+};
 
   /* =========================
      UI
@@ -133,60 +175,163 @@ export default function EpaperAdmin() {
 
       {/* HEADER */}
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-black text-gray-800">
-          📰 Epaper Admin Panel
+        <h1 className="text-5xl font-black text-gray-800">
+          📰 E-Paper Dashboard
         </h1>
-        <p className="text-gray-500">
-          Fully optimized & error-free dashboard
+
+        <p className="text-gray-500 mt-2">
+          Upload & Manage Multi Page E-Papers
         </p>
       </div>
 
       {/* FORM */}
-      <div className="max-w-2xl mx-auto bg-white/70 backdrop-blur-xl border shadow-2xl rounded-2xl p-6 mb-10">
-        <h2 className="text-xl font-bold mb-5">
-          {editId ? "✏️ Update Epaper" : "➕ Upload Epaper"}
+      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl border border-slate-200 p-8 mb-10">
+
+        <h2 className="text-2xl font-bold mb-6">
+          {editId
+            ? "✏️ Update E-Paper"
+            : "➕ Upload New E-Paper"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5"
+        >
 
           {/* TITLE */}
-          <input
-            className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-400"
-            placeholder="Enter Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+          <div>
+            <label className="font-medium block mb-2">
+              Title
+            </label>
+
+            <input
+              type="text"
+              value={title}
+              onChange={(e) =>
+                setTitle(e.target.value)
+              }
+              placeholder="Enter epaper title"
+              className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* DATE */}
+          <div>
+            <label className="font-medium block mb-2">
+              Publish Date
+            </label>
+
+            <input
+              type="date"
+              value={publishDate}
+              onChange={(e) =>
+                setPublishDate(e.target.value)
+              }
+              className="w-full border border-slate-300 rounded-xl p-3"
+            />
+          </div>
+
+          {/* FILES */}
+          <div>
+            <label className="font-medium block mb-2">
+              E-Paper Pages
+            </label>
+
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) =>
+                setPages(
+                  Array.from(
+                    e.target.files || []
+                  )
+                )
+              }
+              className="w-full border border-slate-300 rounded-xl p-3 bg-white"
+            />
+          </div>
+
+          {/* PREVIEW */}
+          {pages.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-3">
+                Selected Pages ({pages.length})
+              </h3>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                {pages.map((file, index) => (
+                  <div
+                    key={index}
+                    className="relative overflow-hidden rounded-xl border bg-white"
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt=""
+                      className="w-full h-44 object-cover"
+                    />
+
+                    <div className="p-2 text-xs text-center bg-slate-50">
+                      Page {index + 1}
+                    </div>
+                  </div>
+                ))}
+
+              </div>
+            </div>
+          )}
+{editId && existingPages.length > 0 && (
+  <div>
+    <h3 className="font-semibold mb-3">
+      Existing Pages ({existingPages.length})
+    </h3>
+
+    <div className="flex gap-4 overflow-x-auto pb-2">
+      {existingPages.map((page, index) => (
+        <div
+          key={page.public_id}
+          className="min-w-[180px] bg-white border rounded-xl overflow-hidden shadow"
+        >
+          <img
+            src={page.url}
+            alt={`Page ${index + 1}`}
+            className="w-full h-56 object-cover"
           />
 
-          {/* DATE (FIXED - NEVER NULL) */}
-          <input
-            type="date"
-            className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-400"
-            value={publishDate || today}
-            onChange={(e) => setPublishDate(e.target.value)}
-          />
-
-          {/* IMAGE */}
-          <input
-            type="file"
-            className="w-full border p-3 rounded-xl bg-white"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
-          />
-
+          <div className="p-2 text-center text-sm bg-slate-50">
+            Existing Page {index + 1}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
           {/* BUTTONS */}
           <div className="flex gap-3 pt-2">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-lg">
-              {editId ? "Update" : "Upload"}
+
+            <button
+              type="submit"
+              disabled={uploading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl shadow-lg"
+            >
+              {uploading
+                ? "Uploading..."
+                : editId
+                ? "Update E-Paper"
+                : "Upload E-Paper"}
             </button>
 
             {editId && (
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-500 text-white px-6 py-2 rounded-xl"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl"
               >
                 Cancel
               </button>
             )}
+
           </div>
 
         </form>
@@ -194,49 +339,83 @@ export default function EpaperAdmin() {
 
       {/* LIST */}
       {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
+        <div className="text-center text-lg">
+          Loading E-Papers...
+        </div>
       ) : epapers.length === 0 ? (
-        <p className="text-center text-gray-400">No epapers found</p>
+        <div className="text-center text-gray-500">
+          No E-Papers Found
+        </div>
       ) : (
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 xl:grid-cols-4 gap-6">
 
-          {epapers.map((ep) => (
+          {epapers.map((epaper) => (
             <div
-              key={ep._id}
-              className="bg-white/80 backdrop-blur-xl border shadow-lg rounded-2xl overflow-hidden hover:shadow-2xl transition"
+              key={epaper._id}
+              className="bg-white rounded-3xl overflow-hidden shadow-xl border hover:shadow-2xl transition-all duration-300"
             >
 
-              {/* IMAGE */}
-              <img
-                src={ep.image?.url}
-                className="w-full h-56 object-cover"
-              />
+              {/* COVER PAGE */}
+           <div className="flex gap-3 overflow-x-auto p-3 bg-slate-100">
+  {epaper.pages?.map((page, index) => (
+    <div
+      key={page.public_id || index}
+      className="min-w-[140px] rounded-xl overflow-hidden border bg-white shadow"
+    >
+      <img
+        src={page.url}
+        alt={`Page ${index + 1}`}
+        className="w-full h-52 object-cover"
+      />
+
+      <div className="text-center text-xs py-2 bg-slate-50 font-medium">
+        Page {index + 1}
+      </div>
+    </div>
+  ))}
+</div>
 
               {/* INFO */}
               <div className="p-4">
-                <h3 className="font-bold text-lg text-gray-800">
-                  {ep.title}
+
+                <h3 className="font-bold text-lg text-gray-800 line-clamp-2">
+                  {epaper.title}
                 </h3>
-                <p className="text-sm text-gray-500">
-                  📅 {ep.publishDate ? new Date(ep.publishDate).toDateString() : ""}
+
+                <p className="text-sm text-gray-500 mt-2">
+                  📅{" "}
+                  {new Date(
+                    epaper.publishDate
+                  ).toDateString()}
                 </p>
+
+                <div className="mt-2 inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-sm font-semibold">
+                  📰 {epaper.pages?.length || 0} Pages
+                </div>
+
               </div>
 
               {/* ACTIONS */}
-              <div className="flex justify-between p-4">
+              <div className="flex justify-between p-4 border-t">
+
                 <button
-                  onClick={() => startEdit(ep)}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded-lg"
+                  onClick={() =>
+                    startEdit(epaper)
+                  }
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg"
                 >
                   Edit
                 </button>
 
                 <button
-                  onClick={() => deleteEpaper(ep._id)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-lg"
+                  onClick={() =>
+                    deleteEpaper(epaper._id)
+                  }
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
                 >
                   Delete
                 </button>
+
               </div>
 
             </div>
@@ -244,7 +423,6 @@ export default function EpaperAdmin() {
 
         </div>
       )}
-
     </div>
   );
 }
