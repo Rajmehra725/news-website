@@ -20,6 +20,8 @@ import {
   BoxIcon,
   LucideAudioWaveform,
   BellElectricIcon,
+  PaperclipIcon,
+  GalleryThumbnailsIcon,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -42,6 +44,8 @@ export default function Sidebar() {
     { name: "YouTube Links", path: "/dashboard/YoutubeLinkManager", icon: LucideYoutube },
     { name: "Advertisement", path: "/dashboard/Advertisement", icon: LucideAudioWaveform },
     { name: "Notifications", path: "/dashboard/notification", icon: BellElectricIcon },
+    { name: "Gallery", path: "/dashboard/Gallery", icon: GalleryThumbnailsIcon },
+    { name: "E-Paper", path: "/dashboard/Epaper", icon: PaperclipIcon },
   ];
 
   return (
